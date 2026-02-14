@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>DecentralChain — Command Center</title>
+    <link rel="icon" href="data:,">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg-primary:#060a13;--bg-card:#0c1220;--bg-card-hover:#111827;--bg-elevated:#151d2e;
+            --border:#1e293b;--border-glow:#334155;--text-primary:#f1f5f9;--text-secondary:#94a3b8;
+            --text-muted:#64748b;--accent:#3b82f6;--accent-glow:#2563eb;--success:#10b981;
+            --success-glow:#059669;--danger:#ef4444;--danger-glow:#dc2626;--warning:#f59e0b;
+            --purple:#8b5cf6;--cyan:#06b6d4;
+            --gradient-brand:linear-gradient(135deg,#3b82f6,#8b5cf6);
+            --gradient-success:linear-gradient(135deg,#10b981,#06b6d4);
+            --gradient-danger:linear-gradient(135deg,#ef4444,#f59e0b);
+            --shadow-glow:0 0 30px rgba(59,130,246,.08);
+            --shadow-card:0 4px 24px rgba(0,0,0,.3);
+            --radius:12px;--radius-lg:16px;
+        }
+        body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;overflow-x:hidden}
+        .mono{font-family:'JetBrains Mono',monospace}
+        .app{display:flex;flex-direction:column;min-height:100vh}
+        .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:var(--bg-card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(20px)}
+        .topbar-brand{display:flex;align-items:center;gap:12px}
+        .topbar-logo{width:36px;height:36px;background:var(--gradient-brand);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+        .topbar-title{font-size:1.1em;font-weight:700;background:var(--gradient-brand);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+        .topbar-subtitle{font-size:.75em;color:var(--text-muted);font-weight:400}
+        .topbar-right{display:flex;align-items:center;gap:16px}
+        .status-pill{display:flex;align-items:center;gap:8px;padding:6px 16px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:100px;font-size:.82em;font-weight:500}
+        .status-indicator{width:8px;height:8px;border-radius:50%;background:var(--text-muted);flex-shrink:0}
+        .status-indicator.running{background:var(--success);box-shadow:0 0 12px var(--success-glow);animation:pulse-glow 2s infinite}
+        .status-indicator.completed{background:var(--accent)}
+        .status-indicator.error{background:var(--danger);box-shadow:0 0 12px var(--danger-glow)}
+        .status-indicator.stopped{background:var(--warning)}
+        .status-indicator.idle{background:var(--text-muted)}
+        @keyframes pulse-glow{0%,100%{opacity:1}50%{opacity:.4}}
+        .clock{font-family:'JetBrains Mono',monospace;color:var(--text-muted);font-size:.82em}
+        .tab-nav{display:flex;gap:2px;padding:8px 24px;background:var(--bg-card);border-bottom:1px solid var(--border)}
+        .tab-nav-btn{padding:10px 20px;background:transparent;border:none;color:var(--text-muted);font-family:'Inter',sans-serif;font-size:.88em;font-weight:500;cursor:pointer;border-radius:8px;transition:all .2s;display:flex;align-items:center;gap:8px}
+        .tab-nav-btn:hover{color:var(--text-secondary);background:var(--bg-elevated)}
+        .tab-nav-btn.active{color:var(--text-primary);background:var(--bg-elevated);border:1px solid var(--border)}
+        .tab-nav-btn .badge-count{padding:2px 8px;background:var(--accent);color:#fff;border-radius:100px;font-size:.72em;font-weight:600;min-width:22px;text-align:center}
+        .tab-panel{display:none;flex:1;overflow-y:auto;padding:20px 24px}
+        .tab-panel.active{display:block}
+        .dash-layout{display:grid;grid-template-columns:1fr 340px;gap:20px}
+        @media(max-width:1200px){.dash-layout{grid-template-columns:1fr}}
+        .dash-main{display:flex;flex-direction:column;gap:16px}
+        .dash-side{display:flex;flex-direction:column;gap:16px}
+        .kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+        @media(max-width:1400px){.kpi-row{grid-template-columns:repeat(3,1fr)}}
+        .kpi{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden;transition:all .3s}
+        .kpi:hover{border-color:var(--border-glow);box-shadow:var(--shadow-glow)}
+        .kpi-icon{font-size:1.2em;margin-bottom:6px}
+        .kpi-val{font-size:1.7em;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+        .kpi-label{font-size:.75em;color:var(--text-muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+        .kpi-sub{font-size:.72em;color:var(--text-muted);margin-top:2px;font-family:'JetBrains Mono',monospace}
+        .kpi.accent .kpi-val{color:var(--accent)}
+        .kpi.success .kpi-val{color:var(--success)}
+        .kpi.danger .kpi-val{color:var(--danger)}
+        .kpi.purple .kpi-val{color:var(--purple)}
+        .kpi.cyan .kpi-val{color:var(--cyan)}
+        .kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+        .kpi.accent::after{background:var(--gradient-brand)}
+        .kpi.success::after{background:var(--gradient-success)}
+        .kpi.danger::after{background:var(--gradient-danger)}
+        .chart-row{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+        @media(max-width:1000px){.chart-row{grid-template-columns:1fr}}
+        .card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .3s}
+        .card:hover{border-color:var(--border-glow)}
+        .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+        .card-title{font-size:.92em;font-weight:600;display:flex;align-items:center;gap:8px}
+        .card-subtitle{font-size:.75em;color:var(--text-muted)}
+        .error-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+        @media(max-width:900px){.error-strip{grid-template-columns:repeat(2,1fr)}}
+        .error-chip{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border)}
+        .error-chip-label{font-size:.8em;color:var(--text-muted)}
+        .error-chip-val{font-size:1em;font-weight:700;color:var(--danger);font-family:'JetBrains Mono',monospace}
+        .error-chip-val.zero{color:var(--success)}
+        .ctrl-section{margin-bottom:16px}
+        .ctrl-section h3{font-size:.82em;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;font-weight:600}
+        .input-group{margin-bottom:10px}
+        .input-group label{display:block;font-size:.82em;color:var(--text-secondary);margin-bottom:4px;font-weight:500}
+        .input-group input{width:100%;padding:8px 12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:.88em;transition:border .2s}
+        .input-group input:focus{outline:none;border-color:var(--accent)}
+        .input-group small{font-size:.7em;color:var(--text-muted);margin-top:2px;display:block}
+        .btn-row{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap}
+        .btn{padding:10px 18px;border:none;border-radius:8px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;font-size:.85em;transition:all .2s;display:flex;align-items:center;gap:6px}
+        .btn:disabled{opacity:.4;cursor:not-allowed}
+        .btn-primary{background:var(--accent);color:#fff}
+        .btn-primary:hover:not(:disabled){background:var(--accent-glow);box-shadow:0 4px 16px rgba(59,130,246,.3)}
+        .btn-danger{background:var(--danger);color:#fff}
+        .btn-danger:hover:not(:disabled){background:var(--danger-glow)}
+        .btn-ghost{background:var(--bg-elevated);color:var(--text-secondary);border:1px solid var(--border)}
+        .btn-ghost:hover:not(:disabled){background:var(--bg-card-hover);color:var(--text-primary)}
+        .preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+        .preset{padding:5px 12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);cursor:pointer;font-size:.78em;font-family:'JetBrains Mono',monospace;transition:all .2s}
+        .preset:hover{background:var(--bg-card-hover);color:var(--text-primary);border-color:var(--accent)}
+        .stat-line{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+        .stat-line:last-child{border:none}
+        .stat-line-label{font-size:.82em;color:var(--text-muted)}
+        .stat-line-val{font-size:.88em;font-weight:600;font-family:'JetBrains Mono',monospace}
+        .log-viewer{background:#050810;border:1px solid var(--border);border-radius:10px;padding:14px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:.76em;line-height:1.7;max-height:350px;min-height:120px}
+        .log-line{color:var(--text-muted);word-break:break-all}
+        .log-line.success{color:var(--success)}
+        .log-line.error{color:var(--danger)}
+        .log-controls-row{display:flex;gap:6px;align-items:center;margin-bottom:10px}
+        .log-controls-row select{flex:1;padding:6px 10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:.82em}
+        .btn-xs{padding:5px 10px;font-size:.75em;border-radius:6px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);cursor:pointer}
+        .btn-xs:hover{background:var(--bg-card-hover);color:var(--text-primary)}
+        .action-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;margin-bottom:6px;font-size:.88em}
+        .action-item:hover{background:var(--bg-card-hover);border-color:var(--border-glow)}
+        .action-icon{font-size:1.1em}
+        .data-toolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;flex-wrap:wrap;gap:10px}
+        .search-box{display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:0 12px;flex:1;max-width:360px}
+        .search-box input{background:transparent;border:none;outline:none;color:var(--text-primary);font-size:.88em;padding:8px 0;flex:1;font-family:'Inter',sans-serif}
+        .search-icon{color:var(--text-muted);font-size:.9em}
+        .data-stats{display:flex;gap:16px;font-size:.82em;color:var(--text-muted)}
+        .data-stats strong{color:var(--text-primary);font-family:'JetBrains Mono',monospace}
+        .data-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+        .data-table thead{background:var(--bg-elevated)}
+        .data-table th{padding:12px 16px;text-align:left;font-size:.75em;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+        .data-table td{padding:10px 16px;font-size:.85em;border-bottom:1px solid var(--border);color:var(--text-secondary)}
+        .data-table tbody tr{transition:background .15s}
+        .data-table tbody tr:hover{background:var(--bg-elevated)}
+        .data-table tbody tr:last-child td{border-bottom:none}
+        .addr-cell{font-family:'JetBrains Mono',monospace;font-size:.82em;color:var(--cyan)}
+        .tx-cell{font-family:'JetBrains Mono',monospace;font-size:.82em}
+        .tx-link{color:var(--accent);text-decoration:none;cursor:pointer}
+        .tx-link:hover{text-decoration:underline}
+        .status-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:.75em;font-weight:600}
+        .status-tag.active,.status-tag.confirmed{background:rgba(16,185,129,.12);color:var(--success)}
+        .status-tag.failed{background:rgba(239,68,68,.12);color:var(--danger)}
+        .status-tag::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+        .pagination{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:16px;padding:10px}
+        .page-btn{padding:6px 12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-muted);cursor:pointer;font-size:.82em;font-family:'JetBrains Mono',monospace;transition:all .15s}
+        .page-btn:hover{background:var(--bg-card-hover);color:var(--text-primary)}
+        .page-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+        .page-btn:disabled{opacity:.3;cursor:not-allowed}
+        .page-info{font-size:.8em;color:var(--text-muted);margin:0 8px}
+        ::-webkit-scrollbar{width:6px}
+        ::-webkit-scrollbar-track{background:var(--bg-primary)}
+        ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+        ::-webkit-scrollbar-thumb:hover{background:var(--border-glow)}
+        @keyframes fade-up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        .animate-in{animation:fade-up .4s ease-out}
+        .toast{position:fixed;bottom:20px;right:20px;background:var(--success);color:#fff;padding:10px 18px;border-radius:8px;font-size:.85em;z-index:9999;animation:fade-up .3s ease-out}
+    </style>
+</head>
+<body>
+<div class="app">
+    <header class="topbar">
+        <div class="topbar-brand">
+            <div class="topbar-logo">⚡</div>
+            <div>
+                <div class="topbar-title">DecentralChain Command Center</div>
+                <div class="topbar-subtitle">Blockchain Mass Transfer &amp; Stress Testing</div>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <div class="status-pill">
+                <span class="status-indicator idle" id="statusDot"></span>
+                <span id="statusText">Idle</span>
+            </div>
+            <div class="clock" id="clock">00:00:00</div>
+        </div>
+    </header>
+    <nav class="tab-nav">
+        <button class="tab-nav-btn active" onclick="switchTab('dashboard')" data-tab="dashboard">📊 Dashboard</button>
+        <button class="tab-nav-btn" onclick="switchTab('wallets')" data-tab="wallets">👛 Wallets <span class="badge-count" id="walletBadge">0</span></button>
+        <button class="tab-nav-btn" onclick="switchTab('transactions')" data-tab="transactions">🔗 Transactions <span class="badge-count" id="txBadge">0</span></button>
+        <button class="tab-nav-btn" onclick="switchTab('logs')" data-tab="logs">📋 Logs</button>
+    </nav>
+
+    <!-- TAB 1: DASHBOARD -->
+    <div class="tab-panel active" id="tab-dashboard">
+    <div class="dash-layout">
+        <div class="dash-main">
+            <!-- 10M TARGET PROGRESS BAR -->
+            <div class="card animate-in" id="targetCard" style="padding:16px 20px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                    <span class="card-title" id="targetCardTitle">🎯 Transaction Target</span>
+                    <div style="display:flex;align-items:center;gap:12px">
+                        <span id="phaseTag" style="padding:3px 10px;border-radius:100px;font-size:.72em;font-weight:600;background:rgba(59,130,246,.15);color:var(--accent)">IDLE</span>
+                        <span class="mono" style="font-size:.9em;font-weight:700" id="targetPct">0.0%</span>
+                    </div>
+                </div>
+                <div style="width:100%;height:24px;background:var(--bg-elevated);border-radius:12px;overflow:hidden;border:1px solid var(--border);position:relative">
+                    <div id="targetBar" style="height:100%;width:0%;background:var(--gradient-brand);border-radius:12px;transition:width .5s ease;position:relative">
+                        <div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:.7em;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)" id="targetBarLabel"></div>
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:.78em;color:var(--text-muted)">
+                    <span><span style="color:var(--success);font-weight:600" id="targetReal">0</span> real · <span style="color:var(--cyan);font-weight:600" id="targetSim">0</span> simulated</span>
+                    <span>Target: <strong style="color:var(--text-primary)" id="targetTotal">10,000,000</strong> · ETA: <span class="mono" id="targetETA">—</span></span>
+                </div>
+            </div>
+            <div class="kpi-row animate-in">
+                <div class="kpi accent"><div class="kpi-icon">📦</div><div class="kpi-val" id="kpiTotal">0</div><div class="kpi-label">Total TX</div><div class="kpi-sub" id="kpiTotalSub">transactions</div></div>
+                <div class="kpi success"><div class="kpi-icon">✅</div><div class="kpi-val" id="kpiSuccess">0</div><div class="kpi-label">Successful</div><div class="kpi-sub" id="kpiSuccessRate">0%</div></div>
+                <div class="kpi danger"><div class="kpi-icon">❌</div><div class="kpi-val" id="kpiFailed">0</div><div class="kpi-label">Failed</div><div class="kpi-sub" id="kpiFailedRate">0%</div></div>
+                <div class="kpi cyan"><div class="kpi-icon">🚀</div><div class="kpi-val" id="kpiThroughput">0</div><div class="kpi-label">Throughput</div><div class="kpi-sub">tx/sec</div></div>
+                <div class="kpi purple"><div class="kpi-icon">⏱️</div><div class="kpi-val" id="kpiElapsed">0s</div><div class="kpi-label">Elapsed</div><div class="kpi-sub">time</div></div>
+                <div class="kpi"><div class="kpi-icon">🔥</div><div class="kpi-val" id="kpiPeak">0</div><div class="kpi-label">Peak Speed</div><div class="kpi-sub">tx/sec</div></div>
+            </div>
+            <div class="chart-row">
+                <div class="card"><div class="card-header"><span class="card-title">📈 Transaction Progress</span></div><canvas id="progressChart" height="160"></canvas></div>
+                <div class="card"><div class="card-header"><span class="card-title">🎯 Distribution</span></div><canvas id="distributionChart" height="160"></canvas></div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">⚠️ Error Analysis</span><span class="card-subtitle" id="errorSummary" style="color:var(--success)">All clear</span></div>
+                <div class="error-strip">
+                    <div class="error-chip"><span class="error-chip-label">Total</span><span class="error-chip-val zero" id="errTotal">0</span></div>
+                    <div class="error-chip"><span class="error-chip-label">Asset</span><span class="error-chip-val zero" id="errAsset">0</span></div>
+                    <div class="error-chip"><span class="error-chip-label">Balance</span><span class="error-chip-val zero" id="errBalance">0</span></div>
+                    <div class="error-chip"><span class="error-chip-label">Checksum</span><span class="error-chip-val zero" id="errChecksum">0</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="dash-side">
+            <div class="card">
+                <div class="ctrl-section">
+                    <h3>⚙️ Test Configuration</h3>
+                    <div class="input-group"><label>Wallets</label><input type="number" id="numWallets" value="1000" min="10" max="2000" step="100"><small>Number of recipient wallets</small></div>
+                    <div class="input-group"><label>Sends / Wallet</label><input type="number" id="sendsPerWallet" value="10" min="1" max="50"><small>TX = Wallets x Sends</small></div>
+                    <div class="input-group"><label>Workers</label><input type="number" id="workers" value="20" min="1" max="100" step="5"><small>Concurrent threads</small></div>
+                    <div class="input-group"><label>Rate Delay (s)</label><input type="number" id="rateDelay" value="0.01" min="0.001" max="1" step="0.001"><small>Delay between submissions</small></div>
+                    <div class="btn-row">
+                        <button class="btn btn-primary" id="startBtn" onclick="startTest()">▶ Start</button>
+                        <button class="btn btn-danger" id="stopBtn" onclick="stopTest()" disabled>⏹ Stop</button>
+                    </div>
+                    <div class="preset-row">
+                        <button class="preset" onclick="setPreset(100,10)">100x10</button>
+                        <button class="preset" onclick="setPreset(500,10)">500x10</button>
+                        <button class="preset" onclick="setPreset(1000,10)">1Kx10</button>
+                        <button class="preset" onclick="setSingle(100,1)" style="border-color:#10b981;color:#10b981">📨 Single TX</button>
+                        <button class="preset" onclick="setTurbo(2000,10)" style="border-color:#ef4444;color:#ef4444">🔥 Turbo Real</button>
+                        <button class="preset" onclick="setHyper()" style="border-color:#f59e0b;color:#f59e0b">⚡ Hyper 25k</button>
+                        <button class="preset" onclick="setBlazing()" style="border-color:#ff4500;color:#ff4500;font-weight:700">⚡⚡ Blazing 250k</button>
+                        <button class="preset" onclick="setPreset(2000,5000)" style="border-color:var(--accent);color:var(--accent)">⚡ 10M Sim</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">👛 Wallet Summary</span></div>
+                <div class="stat-line"><span class="stat-line-label">Total Available</span><span class="stat-line-val" id="wTotal">0</span></div>
+                <div class="stat-line"><span class="stat-line-label">Loaded</span><span class="stat-line-val" id="wLoaded">0</span></div>
+                <div class="stat-line"><span class="stat-line-label">Funded</span><span class="stat-line-val" id="wFunded">0</span></div>
+                <div class="stat-line"><span class="stat-line-label">Depleted</span><span class="stat-line-val" id="wDepleted">0</span></div>
+            </div>
+            <div class="card">
+                <div class="card-header"><span class="card-title">⚡ Quick Actions</span></div>
+                <div class="action-item" onclick="exportMetrics()"><span class="action-icon">📥</span> Export Metrics JSON</div>
+                <div class="action-item" onclick="switchTab('wallets')"><span class="action-icon">👁️</span> Browse All Wallets</div>
+                <div class="action-item" onclick="switchTab('transactions')"><span class="action-icon">🔗</span> View Transactions</div>
+                <div class="action-item" onclick="switchTab('logs')"><span class="action-icon">📋</span> Full Log Viewer</div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- TAB 2: WALLETS -->
+    <div class="tab-panel" id="tab-wallets">
+        <div class="data-toolbar">
+            <div class="search-box"><span class="search-icon">🔍</span><input type="text" id="walletSearch" placeholder="Search wallet address..." oninput="debounceWalletSearch()"></div>
+            <div class="data-stats">Showing <strong id="walletShowing">0</strong> of <strong id="walletTotalCount">0</strong> wallets | Page <strong id="walletPageNum">1</strong> of <strong id="walletTotalPages">1</strong></div>
+        </div>
+        <table class="data-table" id="walletTable">
+            <thead><tr><th style="width:50px">#</th><th>Address</th><th>Public Key</th><th>Status</th></tr></thead>
+            <tbody id="walletTableBody"><tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted)">Click the Wallets tab to load data...</td></tr></tbody>
+        </table>
+        <div class="pagination" id="walletPagination"></div>
+    </div>
+
+    <!-- TAB 3: TRANSACTIONS -->
+    <div class="tab-panel" id="tab-transactions">
+        <div class="data-toolbar">
+            <div class="data-stats"><strong id="txTotalCount">0</strong> transactions recorded | Page <strong id="txPageNum">1</strong> of <strong id="txTotalPages">1</strong></div>
+            <button class="btn btn-ghost" onclick="loadTransactions(1)" style="font-size:.82em">🔄 Refresh</button>
+        </div>
+        <table class="data-table" id="txTable">
+            <thead><tr><th style="width:60px">Batch</th><th>Transaction ID</th><th style="width:100px">Recipients</th><th>Timestamp</th><th style="width:100px">Status</th><th style="width:80px">Explorer</th></tr></thead>
+            <tbody id="txTableBody"><tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">No transactions yet</td></tr></tbody>
+        </table>
+        <div class="pagination" id="txPagination"></div>
+    </div>
+
+    <!-- TAB 4: LOGS -->
+    <div class="tab-panel" id="tab-logs">
+        <div class="card" style="max-width:1200px">
+            <div class="card-header"><span class="card-title">📋 Live Log Viewer</span></div>
+            <div class="log-controls-row">
+                <select id="logScript" onchange="changeLogSource()"><option value="stress_test">Stress Test (full_stress.log)</option><option value="refill_tokens">Token Refill</option><option value="refill_dcc">DCC Refill</option></select>
+                <button class="btn-xs" onclick="clearLogs()">Clear</button>
+                <button class="btn-xs" onclick="fetchLogs()">Refresh</button>
+            </div>
+            <div class="log-viewer" id="logsContainer"><div class="log-line">Ready</div></div>
+        </div>
+    </div>
+</div>
+
+<script>
+function EL(id){return document.getElementById(id)}
+function setText(id,v){var e=EL(id);if(e)e.textContent=v}
+function escapeHtml(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function formatTime(s){if(!s||s<0)return'0s';if(s<60)return s.toFixed(1)+'s';return Math.floor(s/60)+'m '+Math.floor(s%60)+'s'}
+function formatNum(n){if(n>=10000000)return(n/1000000).toFixed(1)+'M';if(n>=1000000)return(n/1000000).toFixed(2)+'M';if(n>=1000)return(n/1000).toFixed(1)+'K';return String(n)}
+
+var logSource='stress_test',progressChart=null,distributionChart=null,walletPage=1,txPage=1,_wst=null;
+
+function switchTab(tab){
+    document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active')});
+    document.querySelectorAll('.tab-nav-btn').forEach(function(b){b.classList.remove('active')});
+    var panel=EL('tab-'+tab);if(panel)panel.classList.add('active');
+    document.querySelectorAll('.tab-nav-btn').forEach(function(b){if(b.getAttribute('data-tab')===tab)b.classList.add('active')});
+    if(tab==='wallets')loadWallets(1);
+    if(tab==='transactions')loadTransactions(1);
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+    initCharts();fetchStatus();fetchLogs();
+    setInterval(fetchStatus,1000);setInterval(fetchLogs,3000);
+    setInterval(function(){setText('clock',new Date().toLocaleTimeString())},1000);
+});
+
+function fetchStatus(){
+    fetch('/api/status').then(function(r){if(!r.ok)throw new Error();return r.json()}).then(function(d){
+        var m=d.metrics||{},w=d.wallets||{};
+        var total=m.total_tx||0,succ=m.successful_tx||0,fail=m.failed_tx||0;
+        var rate=total>0?((succ/total)*100).toFixed(1):'0.0';
+        var frate=total>0?((fail/total)*100).toFixed(1):'0.0';
+        setText('kpiTotal',formatNum(total));setText('kpiSuccess',formatNum(succ));
+        setText('kpiFailed',formatNum(fail));setText('kpiThroughput',(m.throughput||0).toFixed(1));
+        setText('kpiPeak',(m.peak_throughput||0).toFixed(0));
+        setText('kpiElapsed',formatTime(m.elapsed_time||0));
+        setText('kpiSuccessRate',rate+'%');setText('kpiFailedRate',frate+'%');
+        setText('kpiTotalSub',total.toLocaleString()+' transactions');
+        setText('wTotal',w.total||0);setText('wLoaded',w.loaded||0);
+        setText('wFunded',w.funded||0);setText('wDepleted',w.depleted||0);
+        // Target progress bar
+        var target=m.target_tx||0;
+        var pct=target>0?Math.min((total/target)*100,100):0;
+        setText('targetPct',target>0?(pct.toFixed(1)+'%'):'—');
+        setText('targetReal',formatNum(m.real_tx||0));
+        setText('targetSim',formatNum(m.sim_tx||0));
+        setText('targetTotal',target>0?target.toLocaleString():'—');
+        var bar=EL('targetBar');if(bar)bar.style.width=pct+'%';
+        var barLabel=EL('targetBarLabel');if(barLabel)barLabel.textContent=pct>5?formatNum(total):'';
+        // Update target card title based on actual target
+        var targetTitle=EL('targetCardTitle');
+        if(targetTitle){targetTitle.textContent=target>=10000000?'🎯 10M Transaction Target':target>0?('🎯 '+formatNum(target)+' Transaction Target'):'🎯 Transaction Target'}
+        // ETA calculation
+        var tp=m.throughput||0;
+        var remaining=target-total;
+        if(tp>0&&remaining>0){var eta=remaining/tp;setText('targetETA',formatTime(eta))}
+        else if(total>=target){setText('targetETA','Done ✅')}
+        else{setText('targetETA','—')}
+        // Phase tag
+        var phase=m.phase||'idle';
+        var phaseTag=EL('phaseTag');
+        if(phaseTag){
+            var phaseMap={idle:['IDLE','rgba(100,116,139,.2)','var(--text-muted)'],starting:['STARTING','rgba(59,130,246,.15)','var(--accent)'],real:['⛓ REAL TX','rgba(16,185,129,.15)','var(--success)'],simulation:['⚡ SIMULATION','rgba(139,92,246,.15)','var(--purple)'],completed:['✅ COMPLETE','rgba(16,185,129,.2)','var(--success)'],done:['✅ DONE','rgba(16,185,129,.2)','var(--success)']};
+            var p=phaseMap[phase]||phaseMap.idle;phaseTag.textContent=p[0];phaseTag.style.background=p[1];phaseTag.style.color=p[2];
+        }
+        var ec=m.error_count||0;
+        var errVals=[ec,m.asset_errors||0,m.balance_errors||0,m.checksum_errors||0];
+        ['errTotal','errAsset','errBalance','errChecksum'].forEach(function(id,i){
+            var el=EL(id);if(!el)return;el.textContent=errVals[i];
+            el.className='error-chip-val'+(errVals[i]===0?' zero':'');
+        });
+        var es=EL('errorSummary');
+        if(es){es.textContent=ec===0?'All clear — no errors':ec+' error(s) detected';es.style.color=ec===0?'var(--success)':'var(--danger)'}
+        var status=m.current_status||'idle';
+        setText('statusText',status.charAt(0).toUpperCase()+status.slice(1));
+        var dot=EL('statusDot');if(dot)dot.className='status-indicator '+status;
+        if(status==='completed'||status==='error'||status==='stopped'){
+            var sb=EL('startBtn');if(sb){sb.disabled=false;sb.textContent='\u25B6 Start';sb.style.borderColor=''}
+            var stb=EL('stopBtn');if(stb)stb.disabled=true;
+        }
+        if(status==='idle'){
+            var sb=EL('startBtn');if(sb){sb.disabled=false;sb.textContent='\u25B6 Start';sb.style.borderColor=''}
+            var stb=EL('stopBtn');if(stb)stb.disabled=true;
+        }
+        setText('txBadge',formatNum(total));
+        if(status==='running')fetchDetailedMetrics();
+        updateDistChart(m.real_tx||0,m.sim_tx||0,fail);
+    }).catch(function(){
+        setText('statusText','Disconnected');
+        var dot=EL('statusDot');if(dot)dot.className='status-indicator error';
+    });
+}
+
+function fetchDetailedMetrics(){
+    fetch('/api/metrics/detailed').then(function(r){if(!r.ok)return null;return r.json()}).then(function(d){
+        if(d&&d.history)updateProgChart(d.history);
+    }).catch(function(){});
+}
+
+function fetchLogs(){
+    fetch('/api/logs/'+logSource).then(function(r){if(!r.ok)return null;return r.json()}).then(function(d){
+        if(!d||!d.logs)return;var c=EL('logsContainer');if(!c)return;
+        var lines=d.logs.trim().split('\n');if(!lines.length||!lines[0])return;
+        c.innerHTML=lines.map(function(l){
+            var cls='log-line';
+            if(l.indexOf('\u2713')>=0)cls+=' success';
+            else if(l.indexOf('ERROR')>=0||l.indexOf('\u2717')>=0||l.indexOf('failed')>=0)cls+=' error';
+            return'<div class="'+cls+'">'+escapeHtml(l)+'</div>';
+        }).join('');
+        c.scrollTop=c.scrollHeight;
+    }).catch(function(){});
+}
+function changeLogSource(){logSource=EL('logScript').value;EL('logsContainer').innerHTML='<div class="log-line">Loading...</div>';fetchLogs()}
+function clearLogs(){EL('logsContainer').innerHTML='<div class="log-line" style="color:var(--text-muted)">Cleared</div>'}
+
+var _turboMode=false;
+var _hyperMode=false;
+var _singleMode=false;
+var _blazingMode=false;
+function startTest(){
+    var btn=EL('startBtn');btn.disabled=true;btn.textContent='\u23F3 Starting...';
+    var payload={num_wallets:parseInt(EL('numWallets').value)||100,sends_per_wallet:parseInt(EL('sendsPerWallet').value)||10,workers:parseInt(EL('workers').value)||20,rate_delay:parseFloat(EL('rateDelay').value)||0.01};
+    if(_singleMode){payload.single=true;payload.workers=200;_singleMode=false;}
+    else if(_blazingMode){payload.blazing=true;payload.real_workers=200;payload.sim_workers=80;payload.target_rate=250000;payload.duration=60;_blazingMode=false;}
+    else if(_hyperMode){payload.hyper=true;payload.real_workers=200;payload.sim_workers=80;payload.target_rate=25000;payload.duration=60;_hyperMode=false;}
+    else if(_turboMode){payload.turbo=true;payload.workers=200;_turboMode=false;}
+    fetch('/api/control/start',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
+    }).then(function(r){return r.json()}).then(function(d){
+        if(d.success){EL('stopBtn').disabled=false;btn.textContent='\u2705 Running'}
+        else{alert('Failed: '+(d.error||'Unknown'));btn.disabled=false;btn.textContent='\u25B6 Start'}
+    }).catch(function(e){alert('Error: '+e.message);btn.disabled=false;btn.textContent='\u25B6 Start'});
+}
+function stopTest(){
+    fetch('/api/control/stop',{method:'POST'}).then(function(r){return r.json()}).then(function(d){
+        if(d.success){EL('startBtn').disabled=false;EL('startBtn').textContent='\u25B6 Start';EL('stopBtn').disabled=true}
+    }).catch(function(e){alert('Error: '+e.message)});
+}
+function setPreset(w,s){EL('numWallets').value=w;EL('sendsPerWallet').value=s;_turboMode=false;_singleMode=false;_blazingMode=false;_hyperMode=false;}
+function setSingle(w,s){EL('numWallets').value=w;EL('sendsPerWallet').value=s;EL('workers').value=200;EL('rateDelay').value=0;_singleMode=true;_turboMode=false;_hyperMode=false;_blazingMode=false;EL('startBtn').textContent='📨 Start Single TX';EL('startBtn').style.borderColor='#10b981';}
+function setTurbo(w,s){EL('numWallets').value=w;EL('sendsPerWallet').value=s;EL('workers').value=200;EL('rateDelay').value=0;_turboMode=true;_hyperMode=false;_singleMode=false;_blazingMode=false;EL('startBtn').textContent='🔥 Start Turbo';EL('startBtn').style.borderColor='#ef4444';}
+function setHyper(){EL('numWallets').value=2000;EL('sendsPerWallet').value=750;EL('workers').value=200;EL('rateDelay').value=0;_hyperMode=true;_turboMode=false;_singleMode=false;_blazingMode=false;EL('startBtn').textContent='⚡ Start Hyper 25k';EL('startBtn').style.borderColor='#f59e0b';}
+function setBlazing(){EL('numWallets').value=2000;EL('sendsPerWallet').value=7500;EL('workers').value=200;EL('rateDelay').value=0;_blazingMode=true;_hyperMode=false;_turboMode=false;_singleMode=false;EL('startBtn').textContent='⚡⚡ Start Blazing 250k';EL('startBtn').style.borderColor='#ff4500';}
+function exportMetrics(){
+    fetch('/api/status').then(function(r){return r.json()}).then(function(d){
+        var b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+        var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='dcc_metrics_'+Date.now()+'.json';a.click();
+    }).catch(function(e){alert('Export failed: '+e.message)});
+}
+
+function initCharts(){
+    var ctx1=EL('progressChart');
+    if(ctx1){progressChart=new Chart(ctx1.getContext('2d'),{type:'line',data:{labels:[],datasets:[
+        {label:'TX Count',data:[],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.08)',tension:.4,fill:true,pointRadius:0,borderWidth:2},
+        {label:'tx/sec',data:[],borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.08)',tension:.4,fill:true,yAxisID:'y1',pointRadius:0,borderWidth:2}
+    ]},options:{responsive:true,maintainAspectRatio:true,interaction:{mode:'index',intersect:false},scales:{
+        y:{beginAtZero:true,ticks:{color:'#64748b',font:{size:10}},grid:{color:'rgba(51,65,85,.3)'}},
+        y1:{position:'right',beginAtZero:true,ticks:{color:'#64748b',font:{size:10}},grid:{drawOnChartArea:false}},
+        x:{ticks:{color:'#64748b',maxTicksLimit:8,font:{size:10}},grid:{color:'rgba(51,65,85,.15)'}}
+    },plugins:{legend:{labels:{color:'#94a3b8',font:{size:11},boxWidth:10,padding:16}}}}})}
+    var ctx2=EL('distributionChart');
+    if(ctx2){distributionChart=new Chart(ctx2.getContext('2d'),{type:'doughnut',data:{labels:['Real (On-Chain)','Simulated','Failed'],datasets:[{data:[0,0,0],backgroundColor:['#10b981','#8b5cf6','#ef4444'],borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:true,cutout:'68%',plugins:{legend:{labels:{color:'#94a3b8',font:{size:11},padding:12}}}}})}
+}
+function updateProgChart(h){
+    if(!progressChart||!h||!h.timestamps||!h.timestamps.length)return;
+    progressChart.data.labels=h.timestamps.map(function(t){return(t.split('T')[1]||'').substring(0,8)});
+    progressChart.data.datasets[0].data=h.tx_counts||[];progressChart.data.datasets[1].data=h.throughputs||[];
+    progressChart.update('none');
+}
+function updateDistChart(s,f,r){if(!distributionChart)return;distributionChart.data.datasets[0].data=[s,f,r];distributionChart.update('none')}
+
+function loadWallets(page){
+    walletPage=page||1;var search=(EL('walletSearch')||{}).value||'';
+    fetch('/api/wallets/all?page='+walletPage+'&per_page=50&search='+encodeURIComponent(search))
+    .then(function(r){return r.json()}).then(function(d){
+        setText('walletShowing',d.wallets.length);setText('walletTotalCount',d.total);
+        setText('walletPageNum',d.page);setText('walletTotalPages',d.total_pages);setText('walletBadge',formatNum(d.total));
+        var tb=EL('walletTableBody');if(!tb)return;
+        if(!d.wallets.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted)">No wallets found</td></tr>'}
+        else{tb.innerHTML=d.wallets.map(function(w){
+            return '<tr><td style="color:var(--text-muted)">'+w.index+'</td><td class="addr-cell">'+escapeHtml(w.address)+'</td><td style="font-family:JetBrains Mono,monospace;font-size:.82em;color:var(--text-muted)">'+escapeHtml(w.public_key)+'</td><td><span class="status-tag active">Active</span></td></tr>';
+        }).join('')}
+        renderPagination('walletPagination',d.page,d.total_pages,'loadWallets');
+    }).catch(function(){});
+}
+function debounceWalletSearch(){clearTimeout(_wst);_wst=setTimeout(function(){loadWallets(1)},300)}
+
+function loadTransactions(page){
+    txPage=page||1;
+    fetch('/api/transactions?page='+txPage+'&per_page=50')
+    .then(function(r){return r.json()}).then(function(d){
+        setText('txTotalCount',d.total);setText('txPageNum',d.page);
+        setText('txTotalPages',d.total_pages);setText('txBadge',formatNum(d.total));
+        var tb=EL('txTableBody');if(!tb)return;
+        if(!d.transactions.length){tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">No transactions recorded yet</td></tr>'}
+        else{tb.innerHTML=d.transactions.map(function(tx){
+            var txShort=tx.tx_id?(tx.tx_id.substring(0,10)+'...'+tx.tx_id.substring(tx.tx_id.length-6)):'\u2014';
+            var ts=tx.timestamp||'\u2014';if(ts.indexOf('T')>=0)ts=ts.replace('T',' ').substring(0,19);
+            var statusCls=tx.status==='confirmed'?'confirmed':'failed';
+            var explorerUrl=tx.tx_id?('https://explorer.decentralchain.io/tx/'+tx.tx_id):'#';
+            return '<tr><td style="font-family:JetBrains Mono,monospace;color:var(--text-muted)">#'+tx.batch+'</td><td class="tx-cell"><a class="tx-link" onclick="copyTx(\''+escapeHtml(tx.tx_id||'')+'\')">'+escapeHtml(txShort)+'</a></td><td style="text-align:center;font-family:JetBrains Mono,monospace">'+tx.recipients+'</td><td style="font-size:.82em;color:var(--text-muted)">'+escapeHtml(ts)+'</td><td><span class="status-tag '+statusCls+'">'+tx.status+'</span></td><td>'+(tx.tx_id?'<a href="'+explorerUrl+'" target="_blank" class="tx-link" title="View on Explorer">🔗</a>':'\u2014')+'</td></tr>';
+        }).join('')}
+        renderPagination('txPagination',d.page,d.total_pages,'loadTransactions');
+    }).catch(function(){});
+}
+function copyTx(txId){
+    if(!txId)return;
+    navigator.clipboard.writeText(txId).then(function(){
+        var el=document.createElement('div');el.className='toast';
+        el.textContent='\u2713 Copied: '+txId.substring(0,20)+'...';
+        document.body.appendChild(el);setTimeout(function(){el.remove()},2000);
+    });
+}
+
+function renderPagination(containerId,currentPage,totalPages,fnName){
+    var c=EL(containerId);if(!c)return;
+    if(totalPages<=1){c.innerHTML='';return}
+    var html='<button class="page-btn" onclick="'+fnName+'('+(currentPage-1)+')"'+(currentPage<=1?' disabled':'')+'>Prev</button>';
+    var start=Math.max(1,currentPage-3),end=Math.min(totalPages,currentPage+3);
+    if(start>1)html+='<button class="page-btn" onclick="'+fnName+'(1)">1</button><span class="page-info">...</span>';
+    for(var i=start;i<=end;i++){html+='<button class="page-btn'+(i===currentPage?' active':'')+'" onclick="'+fnName+'('+i+')">'+i+'</button>'}
+    if(end<totalPages)html+='<span class="page-info">...</span><button class="page-btn" onclick="'+fnName+'('+totalPages+')">'+totalPages+'</button>';
+    html+='<button class="page-btn" onclick="'+fnName+'('+(currentPage+1)+')"'+(currentPage>=totalPages?' disabled':'')+'>Next</button>';
+    c.innerHTML=html;
+}
+</script>
+</body>
+</html>

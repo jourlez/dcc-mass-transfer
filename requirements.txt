@@ -1,0 +1,4 @@
+pywaves-ce>=2.0.0
+flask>=3.0.0
+flask-cors>=6.0.0
+aiohttp>=3.9.0

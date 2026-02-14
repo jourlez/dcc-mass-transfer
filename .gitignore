@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+.Python
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+
+# Logs
+*.log
+*.pid
+nohup.out
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Sensitive CSV files (contain private keys)
+real_wallets_2000_details.csv
+real_wallets_2000.csv
+real_wallets_2000_0.5dcc.csv
+real_wallets_2000_200tokens.csv
+blockchain_test_2000_details.csv
+senders.json
+
+# Large test/data files
+test_40000.csv
+test_5000.csv
+large_test.csv
+blockchain_test_2000.csv
+blockchain_test_2000_real.csv
+
+# Runtime directories (keep structure with .gitkeep)
+pending/*.csv
+processed/*.csv
+failed/*.csv
+
+# Old/duplicate docs (main README covers everything)
+AUTOMATION.md
+DASHBOARD_DATA_GUIDE.md
+DASHBOARD_FIXES_SUMMARY.md
+DASHBOARD_QUICKSTART.md
+DASHBOARD_README.md
+dashboard_backend_v2.py
