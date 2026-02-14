@@ -4,8 +4,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![DecentralChain](https://img.shields.io/badge/blockchain-DecentralChain-purple.svg)](https://decentralchain.io)
 [![pywaves-ce](https://img.shields.io/badge/SDK-pywaves--ce%202.0-orange.svg)](https://pypi.org/project/pywaves-ce/)
+[![Open Source](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](https://opensource.org/)
 
-> **High-performance blockchain mass transfer toolkit** — send tokens to thousands of recipients on [DecentralChain](https://decentralchain.io) at up to **250,000 tx/sec** with a real-time monitoring dashboard.
+> **Open-source, high-performance blockchain mass transfer toolkit** — send tokens to thousands of recipients on [DecentralChain](https://decentralchain.io) at up to **250,000 tx/sec** with a real-time monitoring dashboard. Free to use, modify, and distribute under the [MIT License](LICENSE).
 
 ---
 
@@ -60,8 +61,8 @@
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/decentralchain-mass-transfer.git
-cd decentralchain-mass-transfer
+git clone https://github.com/33imattei33/dcc-mass-transfer.git
+cd dcc-mass-transfer
 
 python3 -m venv .venv
 source .venv/bin/activate
@@ -389,6 +390,8 @@ pw.OFFLINE = True  # Skip balance checks (node rejects bad TX anyway)
 
 ## 🤝 Contributing
 
+We welcome contributions from the open-source community! Whether it's bug fixes, new features, documentation improvements, or performance optimizations — all contributions are appreciated.
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
@@ -408,7 +411,7 @@ pw.OFFLINE = True  # Skip balance checks (node rejects bad TX anyway)
 
 ## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+This is a **free and open-source** project licensed under the **MIT License** — you are free to use, modify, and distribute this software. See the [LICENSE](LICENSE) file for full details.
 
 ---
 
@@ -421,5 +424,6 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 ---
 
 <p align="center">
-  Built with ⚡ for the DecentralChain ecosystem
+  Built with ⚡ for the DecentralChain ecosystem<br>
+  <sub>🌍 Open Source · MIT Licensed · Community Driven</sub>
 </p>
