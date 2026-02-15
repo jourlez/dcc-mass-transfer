@@ -4,6 +4,7 @@ Sweep DCC from child wallets to main sender.
 Uses requests directly for balance checks to avoid pywaves hanging.
 """
 import csv, time, os, sys, logging
+from dotenv import load_dotenv; load_dotenv()
 
 logging.disable(logging.CRITICAL)
 

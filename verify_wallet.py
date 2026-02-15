@@ -5,7 +5,8 @@ Verify wallet balances and transaction status
 
 import pywaves as pw
 import requests
-import sys
+import sys, os
+from dotenv import load_dotenv; load_dotenv()
 
 # Configuration
 DECENTRALCHAIN_NODE = 'https://mainnet-node.decentralchain.io'

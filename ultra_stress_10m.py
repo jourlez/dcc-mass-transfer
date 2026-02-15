@@ -20,6 +20,7 @@ import pywaves as pw
 import csv
 import sys
 import os
+from dotenv import load_dotenv; load_dotenv()
 import time
 import hashlib
 import secrets

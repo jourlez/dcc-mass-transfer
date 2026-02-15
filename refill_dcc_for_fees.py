@@ -4,6 +4,7 @@ Refill all 2000 wallets with DCC for transaction fees
 """
 
 import os
+from dotenv import load_dotenv; load_dotenv()
 import pywaves as pw
 import csv
 import sys

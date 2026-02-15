@@ -4,7 +4,8 @@ Turbo DCC Sweep — Parallel sweep of DCC from child wallets to main sender.
 Uses 20 concurrent threads with 10s timeouts per wallet.
 """
 import pywaves as pw
-import csv, time, logging, sys
+import csv, time, logging, sys, os
+from dotenv import load_dotenv; load_dotenv()
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 

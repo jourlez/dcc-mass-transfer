@@ -28,6 +28,7 @@ Fee: 0.051 DCC per 100-recipient mass transfer batch.
 """
 import pywaves as pw
 import csv, os, sys, time, logging, secrets, struct, asyncio, json
+from dotenv import load_dotenv; load_dotenv()
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock, Event
 from datetime import datetime
@@ -253,6 +254,8 @@ def presign_batches(sender, asset, batch_template, count):
             return None
 
     # Sign in parallel using threads (pywaves uses Python crypto, GIL-free for C extensions)
+    if count == 0:
+        return []
     with ThreadPoolExecutor(max_workers=min(32, count)) as pool:
         futures = {pool.submit(sign_one, i + 1): i + 1 for i in range(count)}
         for future in futures:
@@ -495,7 +498,10 @@ def main():
                      f"{CONN_LIMIT} connections)...")
         flush_log()
 
-        asyncio.run(run_async_broadcast(signed_txs, min(REAL_WORKERS, len(signed_txs))))
+        if signed_txs:
+            asyncio.run(run_async_broadcast(signed_txs, min(REAL_WORKERS, len(signed_txs))))
+        else:
+            logger.info("⚠️  No real batches to broadcast (insufficient DCC balance)")
     else:
         # FALLBACK: thread pool (still 200 workers = ~7x vs Hyper's 30)
         logger.info(f"⚠ aiohttp not installed — using thread pool ({REAL_WORKERS} workers)")

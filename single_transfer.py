@@ -11,6 +11,7 @@ Use when you need individual on-chain TX IDs per recipient.
 """
 import pywaves as pw
 import csv, os, sys, time, logging
+from dotenv import load_dotenv; load_dotenv()
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock, Event
 from datetime import datetime
