@@ -9,18 +9,20 @@ import csv
 import sys
 import os
 from dotenv import load_dotenv; load_dotenv()
+from config import resolve_node, resolve_chain_id, resolve_private_key
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
 # Configuration
-DECENTRALCHAIN_NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'  # DecentralChain chain ID character (63 = '?' in ASCII)
+DECENTRALCHAIN_NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
+
 
 # Multiple sender private keys - All 5 senders configured for maximum throughput
 SENDERS = [
     {
-        'private_key': os.getenv('DCC_PRIVATE_KEY', 'YOUR_PRIVATE_KEY_HERE'),
+        'private_key': os.getenv('DCC_PRIVATE_KEY') or resolve_private_key(),
         'name': 'Sender 1'
     },
     # {
@@ -41,7 +43,7 @@ SENDERS = [
     # },
 ]
 
-ASSET_ID = '4uPrGkQHQ1Jiimz4WQF2YXCoQTodJzNJW2rDestzpvGD'  # Token asset ID
+ASSET_ID = os.getenv('DCC_ASSET_ID', '')
 
 # Performance settings
 BATCH_SIZE = 100  # Recipients per mass transfer transaction
@@ -174,7 +176,7 @@ def main():
     print(f"Loaded {total_recipients} recipients")
     
     # Create Asset object
-    asset = pw.Asset(ASSET_ID)
+    asset = pw.Asset(ASSET_ID) if ASSET_ID else None
     
     # Split into batches
     batches = []

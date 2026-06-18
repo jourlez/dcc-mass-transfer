@@ -9,16 +9,22 @@ import pywaves as pw
 import csv
 import sys
 import os
+from dotenv import load_dotenv; load_dotenv()
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed, wait
 from threading import Lock
 import random
+from config import validate_config
+
+# ── Validation ─────────────────────────────────────────────────
+validate_config(require_private_key=True, require_node=True)
 
 # Configuration
-DECENTRALCHAIN_NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'  # DecentralChain chain ID character (63 = '?' in ASCII)
+DECENTRALCHAIN_NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
 
-ASSET_ID = '4uPrGkQHQ1Jiimz4WQF2YXCoQTodJzNJW2rDestzpvGD'  # Token asset ID
+
+ASSET_ID = os.getenv('DCC_ASSET_ID', '')
 AMOUNT_PER_TRANSFER = 0.001  # tokens
 
 # Performance settings (tuned for higher throughput + adaptive backoff)
@@ -194,12 +200,12 @@ def main():
     
     # Create Asset object - verify it exists
     try:
-        asset = pw.Asset(ASSET_ID)
+        asset = pw.Asset(ASSET_ID) if ASSET_ID else None
         print(f"Asset loaded: {asset.name if hasattr(asset, 'name') else 'Token'}")
     except Exception as e:
         print(f"Error loading asset: {e}")
         print("Continuing anyway...")
-        asset = pw.Asset(ASSET_ID)
+        asset = pw.Asset(ASSET_ID) if ASSET_ID else None
     
     print(f"\nStarting stress test...\n")
     

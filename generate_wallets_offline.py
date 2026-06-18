@@ -5,11 +5,15 @@ Generate new DecentralChain wallet addresses offline (no node queries).
 import base58
 import hashlib
 import os
+from dotenv import load_dotenv; load_dotenv()
+from config import resolve_node, resolve_chain_id, resolve_private_key
 import csv
 import sys
 from Crypto.Hash import keccak
 
-def generate_address_from_seed(seed, chain_id=63):
+def generate_address_from_seed(seed, chain_id=None):
+    if chain_id is None:
+        chain_id = int(os.getenv('DCC_CHAIN_ID') or resolve_chain_id().encode()[0])
     """Generate a DecentralChain address from a seed phrase"""
     # Generate private key from seed
     seed_bytes = seed.encode('utf-8') if isinstance(seed, str) else seed

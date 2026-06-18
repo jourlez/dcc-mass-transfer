@@ -9,16 +9,22 @@ import pywaves as pw
 import csv
 import time
 import sys
+import os
 import logging
+from dotenv import load_dotenv; load_dotenv()
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
+from config import validate_config, get_wallets_csv
 
 # Suppress noisy pywaves warnings (invalid address logs)
 logging.getLogger().setLevel(logging.ERROR)
 
+# ── Validation ─────────────────────────────────────────────────
+validate_config(require_private_key=True, require_node=True)
+
 # ── Configuration ──────────────────────────────────────────────
-DECENTRALCHAIN_NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'
+DECENTRALCHAIN_NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
 MAIN_SENDER_ADDRESS = '3DXWAcdwiHFmW9xj4FWdso8Ea3eQb1cfKpH'
 WALLETS_CSV = 'real_wallets_2000_details.csv'
 

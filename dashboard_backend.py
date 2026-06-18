@@ -40,9 +40,9 @@ state = {
     }
 }
 
-WORKSPACE = '/Users/mac/PY mass transfer script dcc'
+WORKSPACE = os.path.dirname(os.path.abspath(__file__))
 LOGS_DIR = WORKSPACE
-LOG_FILE_PATH = os.path.join(LOGS_DIR, 'full_stress.log')
+LOG_FILE_PATH = os.path.join(LOGS_DIR, 'dashboard.log')
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -515,7 +515,7 @@ def start_test():
             script_path = os.path.join(WORKSPACE, 'limited_stress_test.py')
             use_mass_transfer = False
             if not os.path.exists(script_path):
-                script_path = '/Users/mac/mass_transfer.py'
+                script_path = os.path.join(WORKSPACE, 'mass_transfer.py')
                 use_mass_transfer = True
                 if not os.path.exists(script_path):
                     return jsonify({'success': False, 'error': 'No script found'}), 500

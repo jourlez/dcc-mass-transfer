@@ -8,15 +8,20 @@ import pywaves as pw
 import csv
 import sys
 import os
+from dotenv import load_dotenv; load_dotenv()
 import time
 import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
+from config import validate_config
+
+# ── Validation ─────────────────────────────────────────────────
+validate_config(require_private_key=True, require_node=True)
 
 # Configuration
-DECENTRALCHAIN_NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'
-ASSET_ID = '4uPrGkQHQ1Jiimz4WQF2YXCoQTodJzNJW2rDestzpvGD'
+DECENTRALCHAIN_NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
+ASSET_ID = os.getenv('DCC_ASSET_ID', '')
 AMOUNT_PER_TRANSFER = 0.1  # tokens
 SENDS_PER_WALLET = 100  # Each wallet sends to 100 random others (needs 10 tokens)
 
@@ -143,7 +148,7 @@ def main():
         sys.exit(0)
     
     # Create Asset object
-    asset = pw.Asset(ASSET_ID)
+    asset = pw.Asset(ASSET_ID) if ASSET_ID else None
     
     print(f"\nStarting stress test...\n")
     

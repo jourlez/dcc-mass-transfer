@@ -12,9 +12,9 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
+from config import get_log_file
 
-WORKSPACE = '/Users/mac/PY mass transfer script dcc'
-LOG_FILE = os.path.join(WORKSPACE, 'full_stress.log')
+LOG_FILE = get_log_file('limited_stress_test')
 
 logging.basicConfig(
     level=logging.INFO,

@@ -8,13 +8,17 @@ import csv, time, logging, sys, os
 from dotenv import load_dotenv; load_dotenv()
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
+from config import validate_config, get_wallets_csv
+
+# ── Validation ─────────────────────────────────────────────────
+validate_config(require_private_key=True, require_node=True)
 
 logging.disable(logging.CRITICAL)  # Suppress pywaves noise
 
-NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'
-MAIN_SENDER_KEY = os.getenv('DCC_PRIVATE_KEY', 'YOUR_PRIVATE_KEY_HERE')
-WALLETS_CSV = '/Users/mac/PY mass transfer script dcc/real_wallets_2000_details.csv'
+NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
+MAIN_SENDER_KEY = os.getenv('DCC_PRIVATE_KEY') or resolve_private_key()
+WALLETS_CSV = get_wallets_csv()
 WORKERS = 15
 FEE = 100000  # 0.001 DCC in satoshis
 

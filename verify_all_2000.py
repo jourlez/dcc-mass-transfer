@@ -3,23 +3,30 @@
 Verify all 2000 wallets received their DCC payments
 """
 import csv
-import subprocess
-import json
+import os
 import time
+import requests
+from dotenv import load_dotenv; load_dotenv()
+from config import validate_config
+
+# ── Validation ─────────────────────────────────────────────────
+validate_config(require_private_key=False, require_node=True)
+
+NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+session = requests.Session()
 
 def check_wallet_balance(address):
     """Check balance of a wallet on the blockchain"""
     try:
-        result = subprocess.run(
-            ['curl', '-s', f'https://mainnet-node.decentralchain.io/addresses/balance/{address}'],
-            capture_output=True,
-            text=True,
+        resp = session.get(
+            f'{NODE}/addresses/balance/{address}',
             timeout=10
         )
-        data = json.loads(result.stdout)
-        return data.get('balance', 0) / 100000000  # Convert to DCC
-    except Exception as e:
-        return None
+        if resp.status_code == 200:
+            return resp.json().get('balance', 0) / 100000000  # Convert to DCC
+    except Exception:
+        pass
+    return None
 
 def verify_all_wallets(csv_file):
     """Verify all wallets in the CSV file"""

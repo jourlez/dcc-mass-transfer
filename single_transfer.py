@@ -15,12 +15,16 @@ from dotenv import load_dotenv; load_dotenv()
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock, Event
 from datetime import datetime
+from config import validate_config, get_log_file, get_wallets_csv
+
+# ── Validation ─────────────────────────────────────────────────
+validate_config(require_private_key=True, require_node=True)
 
 # ── Config ─────────────────────────────────────────────────────
-NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'
-PRIVATE_KEY = os.getenv('DCC_PRIVATE_KEY', 'YOUR_PRIVATE_KEY_HERE')
-ASSET_ID = '4uPrGkQHQ1Jiimz4WQF2YXCoQTodJzNJW2rDestzpvGD'
+NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
+PRIVATE_KEY = os.getenv('DCC_PRIVATE_KEY') or resolve_private_key()
+ASSET_ID = os.getenv('DCC_ASSET_ID', '')
 
 MAX_WORKERS = int(os.getenv('MAX_WORKERS', '200'))
 NUM_WALLETS = int(os.getenv('NUM_WALLETS', '100'))
@@ -29,9 +33,8 @@ AMOUNT_PER_TX = 1  # base units
 MAX_RETRIES = 3
 RATE_LIMIT_DELAY = float(os.getenv('RATE_LIMIT_DELAY', '0'))
 
-WORKSPACE = '/Users/mac/PY mass transfer script dcc'
-LOG_FILE = os.path.join(WORKSPACE, 'full_stress.log')
-WALLETS_CSV = os.path.join(WORKSPACE, 'real_wallets_2000_details.csv')
+LOG_FILE = get_log_file('single_transfer')
+WALLETS_CSV = get_wallets_csv()
 
 # ── Logging ────────────────────────────────────────────────────
 with open(LOG_FILE, 'w') as f:
@@ -140,7 +143,7 @@ def main():
     pw.setNode(node=NODE, chain='custom', chain_id=CHAIN_ID)
 
     sender = pw.Address(privateKey=PRIVATE_KEY)
-    asset = pw.Asset(ASSET_ID)
+    asset = pw.Asset(ASSET_ID) if ASSET_ID else None
 
     # Cache isSmart() and script() results to avoid network calls per TX.
     # Without this, every sendAsset() call makes 3+ API requests,

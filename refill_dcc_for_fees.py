@@ -10,14 +10,18 @@ import csv
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from config import validate_config
+
+# ── Validation ─────────────────────────────────────────────────
+validate_config(require_private_key=True, require_node=True)
 
 # Configuration
-DECENTRALCHAIN_NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'
+DECENTRALCHAIN_NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
 AMOUNT_PER_WALLET = 0.02  # DCC for transaction fees (20 transactions worth)
 
 # Main sender with sufficient DCC balance
-SENDER_PRIVATE_KEY = os.getenv('DCC_PRIVATE_KEY', 'YOUR_PRIVATE_KEY_HERE')
+SENDER_PRIVATE_KEY = os.getenv('DCC_PRIVATE_KEY') or resolve_private_key()
 
 # Performance settings
 MAX_WORKERS = 30

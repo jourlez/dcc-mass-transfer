@@ -3,7 +3,7 @@
 # Enhanced DecentralChain Stress Test Dashboard Launcher
 # Starts the complete monitoring and control system
 
-WORKSPACE="/Users/mac/PY mass transfer script dcc"
+WORKSPACE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$WORKSPACE"
 
 echo ""

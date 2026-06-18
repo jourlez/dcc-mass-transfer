@@ -16,20 +16,23 @@ from dotenv import load_dotenv; load_dotenv()
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock, Event
 from datetime import datetime
+from config import validate_config, get_log_file, get_wallets_csv
+
+# ── Validation ─────────────────────────────────────────────────
+validate_config(require_private_key=True, require_node=True)
 
 # ── Config ─────────────────────────────────────────────────────
-NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'
-PRIVATE_KEY = os.getenv('DCC_PRIVATE_KEY', 'YOUR_PRIVATE_KEY_HERE')
-ASSET_ID = '4uPrGkQHQ1Jiimz4WQF2YXCoQTodJzNJW2rDestzpvGD'
+NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
+PRIVATE_KEY = os.getenv('DCC_PRIVATE_KEY') or resolve_private_key()
+ASSET_ID = os.getenv('DCC_ASSET_ID', '')
 
 BATCH_SIZE = 100
 MAX_WORKERS = int(os.getenv('MAX_WORKERS', '200'))
 AMOUNT_PER_RECIPIENT = 1  # 1 satoshi (minimum)
 
-WORKSPACE = '/Users/mac/PY mass transfer script dcc'
-LOG_FILE = os.path.join(WORKSPACE, 'full_stress.log')
-WALLETS_CSV = os.path.join(WORKSPACE, 'real_wallets_2000_details.csv')
+LOG_FILE = get_log_file('turbo_transfer')
+WALLETS_CSV = get_wallets_csv()
 
 NUM_WALLETS = int(os.getenv('NUM_WALLETS', '2000'))
 SENDS_PER_WALLET = int(os.getenv('SENDS_PER_WALLET', '10'))
@@ -148,7 +151,7 @@ def main():
     # ── Setup pywaves ──────────────────────────────────────────
     pw.setNode(node=NODE, chain='custom', chain_id=CHAIN_ID)
     sender = pw.Address(privateKey=PRIVATE_KEY)
-    asset = pw.Asset(ASSET_ID)
+    asset = pw.Asset(ASSET_ID) if ASSET_ID else None
     
     balance_dcc = sender.balance() / 1e8
 

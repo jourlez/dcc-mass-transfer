@@ -7,10 +7,13 @@ import csv
 import sys
 import hashlib
 import os
+from dotenv import load_dotenv; load_dotenv()
+from config import resolve_node, resolve_chain_id, resolve_private_key
 
 # Configure DecentralChain but we'll work offline
-DECENTRALCHAIN_NODE = 'https://mainnet-node.decentralchain.io'
-pw.setNode(node=DECENTRALCHAIN_NODE, chain='custom', chain_id='?')
+DECENTRALCHAIN_NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
+pw.setNode(node=DECENTRALCHAIN_NODE, chain='custom', chain_id=CHAIN_ID)
 
 # Monkey patch to disable alias fetching which causes node queries
 def no_aliases(self):

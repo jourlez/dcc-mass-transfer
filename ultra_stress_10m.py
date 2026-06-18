@@ -29,12 +29,16 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock, Event
 import logging
 from datetime import datetime
+from config import validate_config, get_log_file, get_wallets_csv
+
+# ── Validation ─────────────────────────────────────────────────
+validate_config(require_private_key=True, require_node=True)
 
 # ── Configuration ──────────────────────────────────────────────
-DECENTRALCHAIN_NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'
-PRIVATE_KEY = os.getenv('DCC_PRIVATE_KEY', 'YOUR_PRIVATE_KEY_HERE')
-ASSET_ID = '4uPrGkQHQ1Jiimz4WQF2YXCoQTodJzNJW2rDestzpvGD'
+DECENTRALCHAIN_NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
+PRIVATE_KEY = os.getenv('DCC_PRIVATE_KEY') or resolve_private_key()
+ASSET_ID = os.getenv('DCC_ASSET_ID', '')
 
 TARGET_TX = int(os.getenv('TARGET_TX', '10000000'))  # 10M target
 BATCH_SIZE = 100                                      # max per mass transfer
@@ -43,9 +47,8 @@ REPORT_EVERY = 500                                    # report interval (batches
 MAX_RETRIES = 1                                       # minimal retries
 TIMEOUT_SECS = 300                                    # 5 minute hard limit
 
-WORKSPACE = '/Users/mac/PY mass transfer script dcc'
-LOG_FILE = os.path.join(WORKSPACE, 'full_stress.log')
-WALLETS_CSV = os.path.join(WORKSPACE, 'real_wallets_2000_details.csv')
+LOG_FILE = get_log_file('ultra_stress_10m')
+WALLETS_CSV = get_wallets_csv()
 
 # ── Logging ────────────────────────────────────────────────────
 # Clear log file first
@@ -207,7 +210,7 @@ def main():
 
     pw.setNode(node=DECENTRALCHAIN_NODE, chain='custom', chain_id=CHAIN_ID)
     sender = pw.Address(privateKey=PRIVATE_KEY)
-    asset = pw.Asset(ASSET_ID)
+    asset = pw.Asset(ASSET_ID) if ASSET_ID else None
 
     balance_dcc = sender.balance() / 100000000
     logger.info(f"Sender: {sender.address}")

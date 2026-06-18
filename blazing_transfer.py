@@ -33,6 +33,7 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Lock, Event
 from datetime import datetime
 from collections import deque
+from config import validate_config, get_log_file, get_wallets_csv
 
 try:
     import aiohttp
@@ -40,11 +41,14 @@ try:
 except ImportError:
     HAS_AIOHTTP = False
 
+# ── Validation ─────────────────────────────────────────────────
+validate_config(require_private_key=True, require_node=True)
+
 # ── Config ─────────────────────────────────────────────────────
-NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'
-PRIVATE_KEY = os.getenv('DCC_PRIVATE_KEY', 'YOUR_PRIVATE_KEY_HERE')
-ASSET_ID = '4uPrGkQHQ1Jiimz4WQF2YXCoQTodJzNJW2rDestzpvGD'
+NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
+PRIVATE_KEY = os.getenv('DCC_PRIVATE_KEY') or resolve_private_key()
+ASSET_ID = os.getenv('DCC_ASSET_ID', '')
 
 BATCH_SIZE = 100
 REAL_WORKERS = int(os.getenv('REAL_WORKERS', '200'))      # 200 async workers (10x)
@@ -60,9 +64,8 @@ CONN_LIMIT_PER_HOST = 200  # All go to same node
 KEEPALIVE_TIMEOUT = 30     # Keep connections alive between batches
 REQUEST_TIMEOUT = 15       # Per-request timeout (seconds)
 
-WORKSPACE = '/Users/mac/PY mass transfer script dcc'
-LOG_FILE = os.path.join(WORKSPACE, 'full_stress.log')
-WALLETS_CSV = os.path.join(WORKSPACE, 'real_wallets_2000_details.csv')
+LOG_FILE = get_log_file('blazing_transfer')
+WALLETS_CSV = get_wallets_csv()
 
 # ── Logging ────────────────────────────────────────────────────
 with open(LOG_FILE, 'w') as f:
@@ -422,7 +425,7 @@ def main():
     # ── Setup pywaves ──────────────────────────────────────────
     pw.setNode(node=NODE, chain='custom', chain_id=CHAIN_ID)
     sender = pw.Address(privateKey=PRIVATE_KEY)
-    asset = pw.Asset(ASSET_ID)
+    asset = pw.Asset(ASSET_ID) if ASSET_ID else None
 
     balance_dcc = sender.balance() / 1e8
 

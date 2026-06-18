@@ -3,19 +3,17 @@ import csv
 import sys
 import os
 from dotenv import load_dotenv; load_dotenv()
+from config import resolve_node, resolve_chain_id, resolve_private_key
 
-# Set DecentralChain node and custom chain id
-pw.setNode(
-    node='https://mainnet-node.decentralchain.io',
-    chain_id='?',  # DecentralChain chain ID character (63 = '?' in ASCII)
-    chain='custom'
-)
+NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
+pw.setNode(node=NODE, chain='custom', chain_id=CHAIN_ID)
 
 # Sender's private key
-PRIVATE_KEY = os.getenv('DCC_PRIVATE_KEY', 'YOUR_PRIVATE_KEY_HERE')
+PRIVATE_KEY = os.getenv('DCC_PRIVATE_KEY') or resolve_private_key()
 
 # Asset ID to transfer
-ASSET_ID = '4uPrGkQHQ1Jiimz4WQF2YXCoQTodJzNJW2rDestzpvGD'
+ASSET_ID = os.getenv('DCC_ASSET_ID', '')
 
 # Path to recipients CSV file (accept from CLI or use default)
 RECIPIENTS_FILE = sys.argv[1] if len(sys.argv) > 1 else 'recipients.csv'
@@ -45,7 +43,7 @@ with open(RECIPIENTS_FILE, newline='') as csvfile:
 myAddress = pw.Address(privateKey=PRIVATE_KEY)
 
 # Create Asset object
-asset = pw.Asset(ASSET_ID)
+asset = pw.Asset(ASSET_ID) if ASSET_ID else None
 
 # Send mass transfer
 if recipients:

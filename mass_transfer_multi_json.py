@@ -8,16 +8,18 @@ import pywaves as pw
 import csv
 import sys
 import os
+from dotenv import load_dotenv; load_dotenv()
+from config import resolve_node, resolve_chain_id, resolve_private_key
 import time
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
 # Configuration
-DECENTRALCHAIN_NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'
+DECENTRALCHAIN_NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
 SENDERS_CONFIG_FILE = 'senders.json'
-ASSET_ID = '4uPrGkQHQ1Jiimz4WQF2YXCoQTodJzNJW2rDestzpvGD'
+ASSET_ID = os.getenv('DCC_ASSET_ID', '')
 
 # Performance settings
 BATCH_SIZE = 100
@@ -185,7 +187,7 @@ def main():
     print(f"Loaded {total_recipients} recipients")
     
     # Create Asset object
-    asset = pw.Asset(ASSET_ID)
+    asset = pw.Asset(ASSET_ID) if ASSET_ID else None
     
     # Split into batches
     batches = []

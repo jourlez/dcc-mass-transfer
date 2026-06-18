@@ -10,11 +10,15 @@ import csv
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from config import validate_config
+
+# ── Validation ─────────────────────────────────────────────────
+validate_config(require_private_key=True, require_node=True)
 
 # Configuration
-DECENTRALCHAIN_NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'
-ASSET_ID = '4uPrGkQHQ1Jiimz4WQF2YXCoQTodJzNJW2rDestzpvGD'
+DECENTRALCHAIN_NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
+ASSET_ID = os.getenv('DCC_ASSET_ID', '')
 AMOUNT_PER_WALLET = 0.002  # tokens to add to each wallet (enough for 10+ transactions)
 
 # All sender private keys for distribution (set via environment variables)

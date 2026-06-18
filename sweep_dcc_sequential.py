@@ -4,16 +4,21 @@ Sweep DCC from child wallets to main sender — robust sequential version.
 Skips already-empty wallets quickly, handles invalid addresses gracefully.
 """
 import sys, os, csv, time, logging
+from dotenv import load_dotenv; load_dotenv()
 
 # Suppress all pywaves/urllib warnings
 logging.disable(logging.CRITICAL)
 os.environ['PYTHONWARNINGS'] = 'ignore'
 
 import pywaves as pw
+from config import validate_config, get_wallets_csv
 
-DECENTRALCHAIN_NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'
-MAIN_SENDER_PRIVKEY = os.getenv('DCC_PRIVATE_KEY', 'YOUR_PRIVATE_KEY_HERE')
+# ── Validation ─────────────────────────────────────────────────
+validate_config(require_private_key=True, require_node=True)
+
+DECENTRALCHAIN_NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
+MAIN_SENDER_PRIVKEY = os.getenv('DCC_PRIVATE_KEY') or resolve_private_key()
 WALLETS_CSV = os.path.join(os.path.dirname(__file__), 'real_wallets_2000_details.csv')
 TRANSFER_FEE = 100000  # 0.001 DCC
 MIN_BALANCE  = 200000  # 0.002 DCC minimum to bother sweeping

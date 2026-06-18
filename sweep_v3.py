@@ -5,15 +5,16 @@ Uses requests directly for balance checks to avoid pywaves hanging.
 """
 import csv, time, os, sys, logging
 from dotenv import load_dotenv; load_dotenv()
+from config import resolve_node, resolve_chain_id, resolve_private_key
 
 logging.disable(logging.CRITICAL)
 
 import pywaves as pw
 import requests
 
-NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'
-MAIN_KEY = os.getenv('DCC_PRIVATE_KEY', 'YOUR_PRIVATE_KEY_HERE')
+NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
+MAIN_KEY = os.getenv('DCC_PRIVATE_KEY') or resolve_private_key()
 CSV_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'real_wallets_2000_details.csv')
 FEE = 100000        # 0.001 DCC
 MIN_BAL = 200000    # only sweep if > 0.002 DCC

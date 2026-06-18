@@ -7,19 +7,20 @@ import pywaves as pw
 import requests
 import sys, os
 from dotenv import load_dotenv; load_dotenv()
+from config import resolve_node, resolve_chain_id, resolve_private_key
 
 # Configuration
-DECENTRALCHAIN_NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'
-ASSET_ID = '4uPrGkQHQ1Jiimz4WQF2YXCoQTodJzNJW2rDestzpvGD'
+DECENTRALCHAIN_NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
+ASSET_ID = os.getenv('DCC_ASSET_ID', '')
 
 # Sender private keys (set via environment variables)
 SENDER_KEYS = [
-    os.getenv('DCC_PRIVATE_KEY', 'YOUR_PRIVATE_KEY_HERE'),
-    os.getenv('DCC_PRIVATE_KEY_2', 'YOUR_PRIVATE_KEY_2_HERE'),
-    os.getenv('DCC_PRIVATE_KEY_3', 'YOUR_PRIVATE_KEY_3_HERE'),
-    os.getenv('DCC_PRIVATE_KEY_4', 'YOUR_PRIVATE_KEY_4_HERE'),
-    os.getenv('DCC_PRIVATE_KEY_5', 'YOUR_PRIVATE_KEY_5_HERE'),
+    os.getenv('DCC_PRIVATE_KEY') or resolve_private_key(),
+    os.getenv('DCC_PRIVATE_KEY_2', ''),
+    os.getenv('DCC_PRIVATE_KEY_3', ''),
+    os.getenv('DCC_PRIVATE_KEY_4', ''),
+    os.getenv('DCC_PRIVATE_KEY_5', ''),
 ]
 
 # Test recipient address

@@ -9,17 +9,19 @@ import csv
 import sys
 import os
 from dotenv import load_dotenv; load_dotenv()
+from config import resolve_node, resolve_chain_id, resolve_private_key
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
 # Configuration
-DECENTRALCHAIN_NODE = 'https://mainnet-node.decentralchain.io'
-CHAIN_ID = '?'  # DecentralChain chain ID character (63 = '?' in ASCII)
+DECENTRALCHAIN_NODE = os.getenv('DCC_NODE') or resolve_node(silent=True)
+CHAIN_ID = os.getenv('DCC_CHAIN_ID') or resolve_chain_id()
+
 
 # Sender configuration
-SENDER_PRIVATE_KEY = os.getenv('DCC_PRIVATE_KEY', 'YOUR_PRIVATE_KEY_HERE')
-ASSET_ID = '4uPrGkQHQ1Jiimz4WQF2YXCoQTodJzNJW2rDestzpvGD'  # Token asset ID
+SENDER_PRIVATE_KEY = os.getenv('DCC_PRIVATE_KEY') or resolve_private_key()
+ASSET_ID = os.getenv('DCC_ASSET_ID', '')
 
 # Performance settings
 MAX_WORKERS = 50  # Concurrent transfers
@@ -121,7 +123,7 @@ def main():
     print(f"Loaded {total_recipients} recipients")
     
     # Create Asset object
-    asset = pw.Asset(ASSET_ID)
+    asset = pw.Asset(ASSET_ID) if ASSET_ID else None
 
     # Cache isSmart() and script() to avoid redundant API calls per TX
     _cached_is_smart = asset.isSmart()
