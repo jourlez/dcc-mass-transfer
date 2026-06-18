@@ -21,24 +21,6 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 CORS(app)
 
-# Global state
-state = {
-    'processes': {},
-    'metrics': {
-        'total_tx': 0, 'successful_tx': 0, 'failed_tx': 0, 'retry_tx': 0,
-        'throughput': 0.0, 'elapsed_time': 0, 'current_status': 'idle',
-        'start_time': None, 'error_count': 0, 'asset_errors': 0,
-        'balance_errors': 0, 'checksum_errors': 0, 'success_rate': 0.0,
-        'real_tx': 0, 'sim_tx': 0, 'target_tx': 10000000,
-        'phase': 'idle', 'peak_throughput': 0.0
-    },
-    'wallets': { 'total': 0, 'loaded': 0, 'valid': 0, 'funded': 0, 'depleted': 0 },
-    'history': {
-        'timestamps': deque(maxlen=300), 'tx_counts': deque(maxlen=300),
-        'success_counts': deque(maxlen=300), 'failed_counts': deque(maxlen=300),
-        'throughputs': deque(maxlen=300)
-    }
-}
 
 WORKSPACE = os.path.dirname(os.path.abspath(__file__))
 LOGS_DIR = WORKSPACE

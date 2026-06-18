@@ -82,8 +82,13 @@ if __name__ == '__main__':
         print("Example: python3 generate_real_wallets.py 2000 wallets.csv 0.01")
         sys.exit(1)
     
-    count = int(sys.argv[1])
+    try:
+        count = int(sys.argv[1])
+        amount = float(sys.argv[3])
+    except ValueError as exc:
+        print(f"Error: {exc}")
+        print("  <count> must be an integer, <amount_per_wallet> must be a number.")
+        sys.exit(1)
     output_file = sys.argv[2]
-    amount = float(sys.argv[3])
     
     generate_wallets(count, output_file, amount)

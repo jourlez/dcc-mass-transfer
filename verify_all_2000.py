@@ -4,10 +4,11 @@ Verify all 2000 wallets received their DCC payments
 """
 import csv
 import os
+import sys
 import time
 import requests
 from dotenv import load_dotenv; load_dotenv()
-from config import validate_config
+from config import validate_config, resolve_node, resolve_chain_id, get_wallets_csv
 
 # ── Validation ─────────────────────────────────────────────────
 validate_config(require_private_key=False, require_node=True)
@@ -36,8 +37,7 @@ def verify_all_wallets(csv_file):
     wallets = []
     with open(csv_file, 'r') as f:
         reader = csv.reader(f)
-        next(reader)  # Skip header
-        next(reader)  # Skip second header line
+        next(reader)  # Skip header row
         for row in reader:
             if row and len(row) > 0:
                 wallets.append(row[0])
@@ -88,4 +88,5 @@ def verify_all_wallets(csv_file):
     print("=" * 80)
 
 if __name__ == '__main__':
-    verify_all_wallets('real_wallets_2000.csv')
+    csv_path = sys.argv[1] if len(sys.argv) > 1 else get_wallets_csv()
+    verify_all_wallets(csv_path)

@@ -33,7 +33,7 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Lock, Event
 from datetime import datetime
 from collections import deque
-from config import validate_config, get_log_file, get_wallets_csv
+from config import validate_config, get_log_file, get_wallets_csv, resolve_node, resolve_chain_id, resolve_private_key
 
 try:
     import aiohttp
@@ -211,7 +211,6 @@ async def run_async_broadcast(signed_txs, num_workers):
         keepalive_timeout=KEEPALIVE_TIMEOUT,
         enable_cleanup_closed=True,
         force_close=False,
-        ssl=False  # Skip SSL verification for speed (node uses HTTPS but we trust it)
     )
 
     log_queue = deque()

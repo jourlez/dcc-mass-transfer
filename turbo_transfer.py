@@ -16,7 +16,7 @@ from dotenv import load_dotenv; load_dotenv()
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock, Event
 from datetime import datetime
-from config import validate_config, get_log_file, get_wallets_csv
+from config import validate_config, get_log_file, get_wallets_csv, resolve_node, resolve_chain_id, resolve_private_key
 
 # ── Validation ─────────────────────────────────────────────────
 validate_config(require_private_key=True, require_node=True)
@@ -164,7 +164,7 @@ def main():
     sender.script = lambda: _cached_script
     # Skip per-TX balance checks (node rejects bad TX anyway)
     pw.OFFLINE = True
-    fee_per_batch = 0.001 + 0.0005 * BATCH_SIZE  # 0.051 DCC for 100 recipients
+    fee_per_batch = 0.001 + 0.0005 * BATCH_SIZE  # 0.001 base + 0.0005/recipient
     max_affordable = int(balance_dcc / fee_per_batch)
     
     logger.info(f"Sender: {sender.address}")
@@ -185,12 +185,25 @@ def main():
     
     # ── Load wallets ───────────────────────────────────────────
     addresses = []
-    with open(WALLETS_CSV) as f:
-        for row in csv.DictReader(f):
-            addr = row.get('address', '').strip()
-            if addr and len(addresses) < NUM_WALLETS:
-                addresses.append(addr)
-    
+    try:
+        with open(WALLETS_CSV) as f:
+            for row in csv.DictReader(f):
+                addr = row.get('address', '').strip()
+                if addr and len(addresses) < NUM_WALLETS:
+                    addresses.append(addr)
+    except FileNotFoundError:
+        logger.error(f"Wallet CSV not found: {WALLETS_CSV}")
+        logger.error("Run generate_real_wallets.py first.")
+        sys.exit(1)
+
+    if not addresses:
+        logger.error(f"No addresses loaded from {WALLETS_CSV}. Is the file empty?")
+        sys.exit(1)
+
+    if len(addresses) < NUM_WALLETS:
+        logger.warning(f"Loaded {len(addresses)} addresses — fewer than NUM_WALLETS={NUM_WALLETS}. "
+                       "Addresses will be cycled.")
+
     logger.info(f"Loaded {len(addresses)} recipient addresses")
     
     # ── Build batch template ───────────────────────────────────

@@ -96,7 +96,7 @@ def probe_node(url: str, timeout: int = 5) -> NodeInfo:
         info.error = f'connection refused ({exc.__class__.__name__})'
     except requests.exceptions.Timeout:
         info.error = f'timeout after {timeout}s'
-    except Exception as exc:  # noqa: BLE001
+    except (requests.exceptions.RequestException, ValueError, KeyError) as exc:
         info.error = str(exc)
 
     if info.healthy:
@@ -105,7 +105,7 @@ def probe_node(url: str, timeout: int = 5) -> NodeInfo:
             rv = requests.get(f'{url}/node/version', timeout=timeout)
             if rv.status_code == 200:
                 info.version = rv.json().get('version', 'unknown')
-        except Exception:  # noqa: BLE001
+        except (requests.exceptions.RequestException, ValueError):
             pass
 
     return info
@@ -133,7 +133,7 @@ def _discover_peers(seed_url: str, timeout: int = 5) -> List[str]:
             if host and port:
                 urls.append(f'http://{host}:{port}')
         return urls
-    except Exception:  # noqa: BLE001
+    except (requests.exceptions.RequestException, ValueError, KeyError):
         return []
 
 

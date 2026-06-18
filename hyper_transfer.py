@@ -15,7 +15,7 @@ from dotenv import load_dotenv; load_dotenv()
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Thread, Lock, Event
 from datetime import datetime
-from config import validate_config, get_log_file, get_wallets_csv
+from config import validate_config, get_log_file, get_wallets_csv, resolve_node, resolve_chain_id, resolve_private_key
 
 # ── Validation ─────────────────────────────────────────────────
 validate_config(require_private_key=True, require_node=True)
